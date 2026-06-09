@@ -1,0 +1,1667 @@
+cat > /tmp/create_notes.js << 'EOF'
+const { Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell, 
+        AlignmentType, HeadingLevel, BorderStyle, WidthType, ShadingType, 
+        VerticalAlign, PageBreak, LevelFormat } = require('docx');
+const fs = require('fs');
+
+const doc = new Document({
+  styles: {
+    default: {
+      document: {
+        run: { font: "Arial", size: 22 }
+      }
+    },
+    paragraphStyles: [
+      {
+        id: "Heading1",
+        name: "Heading 1",
+        basedOn: "Normal",
+        next: "Normal",
+        run: { size: 32, bold: true, font: "Arial", color: "1F4E78" },
+        paragraph: { spacing: { before: 240, after: 120 }, outlineLevel: 0 }
+      },
+      {
+        id: "Heading2",
+        name: "Heading 2",
+        basedOn: "Normal",
+        next: "Normal",
+        run: { size: 28, bold: true, font: "Arial", color: "2E5C8A" },
+        paragraph: { spacing: { before: 200, after: 100 }, outlineLevel: 1 }
+      },
+      {
+        id: "Heading3",
+        name: "Heading 3",
+        basedOn: "Normal",
+        next: "Normal",
+        run: { size: 26, bold: true, font: "Arial", color: "404040" },
+        paragraph: { spacing: { before: 160, after: 80 }, outlineLevel: 2 }
+      }
+    ]
+  },
+  numbering: {
+    config: [
+      {
+        reference: "bullets",
+        levels: [
+          { level: 0, format: LevelFormat.BULLET, text: "•", alignment: AlignmentType.LEFT,
+            style: { paragraph: { indent: { left: 720, hanging: 360 } } } },
+          { level: 1, format: LevelFormat.BULLET, text: "◦", alignment: AlignmentType.LEFT,
+            style: { paragraph: { indent: { left: 1440, hanging: 360 } } } }
+        ]
+      }
+    ]
+  },
+  sections: [{
+    properties: {
+      page: {
+        size: { width: 12240, height: 15840 },
+        margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+      }
+    },
+    children: [
+      // Title page
+      new Paragraph({
+        children: [new TextRun({ text: "Software Requirements", bold: true, size: 48, color: "1F4E78" })],
+        alignment: AlignmentType.CENTER,
+        spacing: { before: 400, after: 200 }
+      }),
+      new Paragraph({
+        children: [new TextRun({ text: "Study Notes: Chapters 5, 6, 9, 10, 11, 12", size: 32, color: "2E5C8A" })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 600 }
+      }),
+      new Paragraph({
+        children: [new TextRun({ text: "Karl Wiegers & Joy Beatty (3rd Edition)", size: 24, italics: true })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 200 }
+      }),
+      new Paragraph({
+        children: [new TextRun({ text: "GCUF - Software Engineering", size: 24, italics: true })],
+        alignment: AlignmentType.CENTER,
+        spacing: { after: 600 }
+      }),
+      
+      new PageBreak(),
+      
+      // CHAPTER 5
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun("CHAPTER 5: Establishing the Business Requirements")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Overview")]
+      }),
+      
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Business requirements describe the primary benefits that the new system will provide to sponsors, buyers, and users")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Business requirements directly influence which user requirements to implement and in what sequence")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Project is launched based on belief that creating/changing product will provide worthwhile benefits and suitable ROI")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Key Concepts")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("1. Product Vision and Project Scope")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Vision: What the product is intended to achieve")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Scope: What will and will not be included in the project")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Scope creep: Uncontrolled growth of project scope due to stakeholder requests")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("2. Conflicting Business Requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Different stakeholders may have conflicting objectives and interests")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Example: Customer wants quick transactions; Retailer wants customers to linger")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("BA role: Surface conflicts, flag conflicting objectives, facilitate resolution")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Decision makers must resolve conflicts - not the software team")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("3. Vision and Scope Document")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Owner: Executive sponsor or funding authority")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Input sources: Senior management, product visionary, product manager, SME, marketing")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Sets the stage for subsequent development work")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Alternative names: Project charter, business case, market requirements document (MRD)")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("4. Vision & Scope Document Template")]
+      }),
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Section 1: Business Requirements", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("1.1 Background - Rationale and context for the product")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("1.2 Business Opportunity - Problem being solved or process being improved")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("1.3 Business Objectives - Important measurable benefits (financial & non-financial)")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("1.4 Success Metrics - Indicators to measure project success")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Section 2: Scope and Limitations", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Defines boundaries of what's included and excluded")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Section 3: Business Context", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Stakeholder descriptions, user profiles, operational environment")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("5. Business Objectives")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Must be measurable and quantifiable, not platitudes")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Financial Examples:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Capture X% market share within Y months")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Achieve X% ROI within Y months")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Save $X per year on maintenance")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Non-Financial Examples:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Achieve customer satisfaction measure of X within Y months")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Increase productivity by X%, reduce error rate to Y%")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Ranked as top product for reliability")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("6. Business Objectives Model")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Shows hierarchy of related business problems and objectives")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Problems: What's keeping business from meeting goals")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Objectives: How to measure achievement of those goals")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Ask 'What is keeping us from achieving X?' to identify problems")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Ask 'How will we assess if problem is solved?' to identify objectives")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("7. Success Metrics")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Factors that define and measure project success")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Can be tracked during testing or shortly after release")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Choose wisely - measure what's important, not just easy to measure")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("8. Scope Representation Techniques")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Context Diagram:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Shows system and its interfaces with external entities")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Ecosystem Map:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Illustrates system in broader business environment")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Feature Tree:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Hierarchical breakdown of product features")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Event List:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("List of events that system must respond to")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("9. Scope Management")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Use business objectives to make scoping decisions")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Assess impact of scope changes on schedule, budget, and resources")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Address decision maker changes - revisit baseline requirements immediately")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("10. Vision and Scope on Agile Projects")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Still important to define business context and objectives")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("May be shorter or lighter weight than traditional approach")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Use business objectives to determine project completion")]
+      }),
+      
+      new PageBreak(),
+      
+      // CHAPTER 6
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun("CHAPTER 6: Finding the Voice of the User")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Overview")]
+      }),
+      
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Understanding who will use the system is critical to success")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Different user classes have different needs and perspectives")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Need to represent all user voices in requirements development")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Key Concepts")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("1. User Classes")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Groups of users with similar characteristics and requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Different from actors - focus on user community, not roles in use cases")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Classifying Users by:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Primary vs. secondary users")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Frequency of use")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Level of expertise")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Physical location")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Organization/business function")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Primary Users:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Directly affected by system operations")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Use system regularly to perform business tasks")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Secondary Users:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Use system occasionally or indirectly")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Maintain or support system")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("2. User Personas")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Fictional but realistic representations of user classes")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Make users concrete and memorable")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Include details: name, role, experience, goals, pain points")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Help team empathize with users")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("3. Product Champion")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Key user representative who provides voice of customer")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Authority to make decisions for their user class")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Available for ongoing consultation")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Committed to project success")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "External Product Champions:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("From user organization, not development organization")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Provides authentic user perspective")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("4. Product Champion Expectations")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Be available for requirement discussions")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Represent user class accurately, not personal preferences")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Provide timely feedback")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Resolve conflicts within user class")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Participate in requirements validation")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("5. Multiple Product Champions")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("One for each major user class")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Prevents one user perspective from dominating")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Improves customer satisfaction across user base")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("6. Product Champion Traps to Avoid")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Don't rely on single person to represent all users")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Avoid champions focused on their own agenda, not user class needs")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Challenge unrealistic or biased requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Be alert for champions who want to redesign work processes")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("7. Selling the Product Champion Idea")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Explain time commitment and responsibilities")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Emphasize project success depends on good requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Show how being involved ensures their needs are met")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("8. User Representation on Agile Projects")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Product owner represents user voice")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Close, continuous collaboration with development team")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Frequent feedback and validation")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("9. Resolving Conflicting Requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Different user classes may have incompatible needs")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Involve decision makers and user representatives")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Look for creative solutions that satisfy all parties")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Prioritize requirements to resolve conflicts")]
+      }),
+      
+      new PageBreak(),
+      
+      // CHAPTER 9
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun("CHAPTER 9: Playing by the Rules")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Overview")]
+      }),
+      
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Business rules constrain system behavior and business practices")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Critical for system design and implementation")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Often overlooked in requirements gathering")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Key Concepts")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("1. Business Rules Definition")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Policy or practice constraints on how business operates")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Dictate what system can/cannot do")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Often derived from business, legal, or regulatory requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Examples: Discount policies, workflow rules, access controls")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("2. Business Rules Taxonomy")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Terms and Facts:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Definitions of key business concepts")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Attributes and relationships")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Constraints:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Restrictions on allowed values or relationships")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Example: Customer credit limit cannot exceed $10,000")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Action Enablers:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Enable or trigger business processes")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Example: Generate reorder alert when inventory below threshold")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Computations:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Calculate values based on other values")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Example: Discount = Quantity * Unit Price * Discount Rate")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Inference Rules:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Derive new information from existing facts")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Example: IF order total > $1000 THEN qualified for bulk discount")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("3. Documentation Approaches")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Structured text: Clear, natural language format")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Decision tables: Matrix of conditions and outcomes")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Decision trees: Graphical flow of decisions")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Use cases/scenarios: Show rules in context of business process")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("4. Sources of Business Rules")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Subject matter experts")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Legal and compliance regulations")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Industry best practices")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Competitive analysis")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Customer feedback")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("5. Key Considerations")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Business rules change more frequently than other requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("May be embedded in legacy systems - need to identify explicitly")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Distinguish between rules and functional requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Separate rules from their implementation")]
+      }),
+      
+      new PageBreak(),
+      
+      // CHAPTER 10
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun("CHAPTER 10: Documenting the Requirements")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Overview")]
+      }),
+      
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Software Requirements Specification (SRS) - primary requirements document")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Communicates requirements to all stakeholders")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Reference for design, implementation, and testing")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Basis for change management and project tracking")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Key Concepts")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("1. Purpose of SRS")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Agreement document between customer and development team")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Input to design and implementation")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Baseline for test planning and execution")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Source for traceability matrix")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Historical record of system requirements")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("2. SRS Template Sections")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "1. Introduction", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Purpose of SRS")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Scope of project")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Definitions, acronyms, abbreviations")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("References")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Overview of document")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "2. Overall Description", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Product perspective")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Product functions")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("User classes and characteristics")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Operating environment")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Constraints")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Assumptions and dependencies")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "3. Specific Requirements", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("External interface requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Functional requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Performance requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Safety requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Security requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Software quality attributes")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("3. Characteristics of Good Requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Necessary: Needed to meet business objectives")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Concise: Stated briefly and clearly")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Clear: Unambiguous")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Verifiable: Can be tested")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Consistent: No contradictions")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Feasible: Possible to implement")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Traceable: Can be traced to business objectives")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("4. Organizing Requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("By user class: Separate sections for each user group")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("By feature: Group related functionality")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("By priority: Important requirements first")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("By type: Functional, performance, etc.")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("5. Requirement Format")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Numbered for traceability")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Unique identifier (e.g., REQ-5.3.2)")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Clear statement of requirement")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Priority assignment")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Optional: Source, rationale, notes")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("6. Template Tactics")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Use templates to ensure consistency")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Adapt template to project needs")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Fill sections as information becomes available")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Empty sections highlight knowledge gaps")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("'Shrink to fit' - keep only what's relevant")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("7. SRS on Agile Projects")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Requirements captured incrementally")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("User stories in product backlog")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("High-level requirements in beginning")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Detailed requirements emerge during sprints")]
+      }),
+      
+      new PageBreak(),
+      
+      // CHAPTER 11
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun("CHAPTER 11: Writing Excellent Requirements")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Overview")]
+      }),
+      
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Quality of individual requirements impacts entire project")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Poor requirements lead to poor products")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Need clear criteria for evaluating requirement quality")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Key Concepts")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("1. Characteristics of High-Quality Requirements")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Atomic:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Single, indivisible piece of functionality")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Avoid 'and' to link separate requirements")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Complete:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Contains all necessary information")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Reader doesn't need other documents to understand")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Consistent:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("No contradictions with other requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Terminology used consistently")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Feasible:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Can be implemented with available resources")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Acknowledge trade-offs")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Necessary:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Required to meet business objectives")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Not 'nice to have' features")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Unambiguous:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Single interpretation")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Clear language")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Avoid vague terms like 'fast', 'easy', 'user-friendly'")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Verifiable:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Can be tested or inspected")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Quantifiable acceptance criteria")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Avoid subjective requirements")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("2. Writing Functional Requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Describe what system must do")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Use 'shall' to indicate mandatory requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Use 'should' for optional or desirable features")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Specify inputs, processing, and outputs")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Include acceptance criteria")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("3. Writing Non-Functional Requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Describe how system performs (performance, reliability, usability)")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Must be quantifiable")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Examples: Response time < 2 seconds, 99.9% availability")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Include performance metrics, security standards")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("4. Common Requirement Problems")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Gold Plating:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Adding unnecessary features")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Increases cost and complexity")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Assumed Requirements:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Features team assumes are needed")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Never explicitly stated or validated")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Design Embedded in Requirements:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Prescribes how instead of what")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Limits design flexibility")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Over-specification:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Too much detail for requirements level")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Better suited for design documentation")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("5. Requirement Statements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Use imperative mood: 'The system shall...'")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Be specific with quantities and thresholds")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Avoid vague terms: 'fast', 'robust', 'easy'")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Use positive statements when possible")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Separate independent requirements")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("6. Requirement Quality Review")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Is it necessary?")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Is it feasible?")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Is it verifiable?")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Is it clear?")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Is it consistent with others?")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Is it atomic?")]
+      }),
+      
+      new PageBreak(),
+      
+      // CHAPTER 12
+      new Paragraph({
+        heading: HeadingLevel.HEADING_1,
+        children: [new TextRun("CHAPTER 12: A Picture is Worth 1024 Words")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Overview")]
+      }),
+      
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Visual models supplement textual requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Different people understand information differently")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Visual representations clarify complex concepts")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Models facilitate communication with stakeholders")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_2,
+        children: [new TextRun("Key Concepts")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("1. Types of Modeling Approaches")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Data Flow Diagram (DFD):", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Shows how data moves through system")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Processes, data stores, external entities")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Useful for functional decomposition")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Entity-Relationship Diagram (ERD):", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Shows data structure and relationships")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Entities and their attributes")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Cardinality and relationships")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Use Case Diagrams:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Shows user interactions with system")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Actors and use cases")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Relationships and dependencies")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "State Diagrams:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Shows system states and transitions")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Useful for state machines")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Events that trigger state changes")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Class Diagrams:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Object-oriented structure")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Classes, attributes, and relationships")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Inheritance and associations")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 120, after: 80 },
+        children: [new TextRun({ text: "Sequence Diagrams:", bold: true })]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Shows interaction sequences")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Message passing between objects")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 1 },
+        children: [new TextRun("Timing of interactions")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("2. Context Diagram")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Shows system as black box")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("System and external entities")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Data flows between them")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Establishes system boundaries")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("3. Prototyping and Models")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Prototypes show user interface")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Mockups and wireframes")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Interactive prototypes for validation")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Helps clarify requirements through visualization")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("4. Model Quality")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Consistent notation")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Clear and readable")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Complete representation")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Not too detailed or too abstract")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Validated with stakeholders")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("5. When to Use Models")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Clarifying complex processes")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Communicating with stakeholders")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Identifying missing requirements")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Supporting traceability")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Design and implementation guidance")]
+      }),
+      
+      new Paragraph({
+        heading: HeadingLevel.HEADING_3,
+        children: [new TextRun("6. Modeling in Agile")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Lightweight models")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Quick sketches and diagrams")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Just enough detail for communication")]
+      }),
+      new Paragraph({
+        numbering: { reference: "bullets", level: 0 },
+        children: [new TextRun("Disposable models that support conversation")]
+      }),
+      
+      new Paragraph({
+        spacing: { before: 240 },
+        children: [new TextRun({ text: "END OF NOTES", bold: true, italics: true, size: 24 })]
+      })
+    ]
+  }]
+});
+
+Packer.toBuffer(doc).then(buffer => {
+  fs.writeFileSync("/mnt/user-data/outputs/Software_Requirements_Study_Notes.docx", buffer);
+  console.log("Document created successfully!");
+});
+EOF
+node /tmp/create_notes.js
