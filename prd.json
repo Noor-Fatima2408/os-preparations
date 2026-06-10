@@ -1,0 +1,809 @@
+const {
+  Document, Packer, Paragraph, TextRun, Table, TableRow, TableCell,
+  HeadingLevel, AlignmentType, BorderStyle, WidthType, ShadingType,
+  LevelFormat, PageNumber, PageBreak, Header, Footer, TabStopType,
+  TabStopPosition, ExternalHyperlink
+} = require('docx');
+const fs = require('fs');
+
+const BRAND = "4F46E5"; // indigo
+const BRAND_LIGHT = "EEF2FF";
+const ACCENT = "7C3AED";
+const GRAY = "6B7280";
+const DARK = "111827";
+const MID = "374151";
+const LIGHT_BORDER = "E5E7EB";
+const TABLE_HEAD = "312E81";
+
+const border = { style: BorderStyle.SINGLE, size: 1, color: LIGHT_BORDER };
+const borders = { top: border, bottom: border, left: border, right: border };
+const noBorder = { style: BorderStyle.NONE, size: 0, color: "FFFFFF" };
+const noBorders = { top: noBorder, bottom: noBorder, left: noBorder, right: noBorder };
+
+function h1(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_1,
+    spacing: { before: 400, after: 160 },
+    children: [new TextRun({ text, bold: true, size: 36, color: DARK, font: "Arial" })]
+  });
+}
+
+function h2(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_2,
+    spacing: { before: 320, after: 120 },
+    children: [new TextRun({ text, bold: true, size: 28, color: BRAND, font: "Arial" })]
+  });
+}
+
+function h3(text) {
+  return new Paragraph({
+    heading: HeadingLevel.HEADING_3,
+    spacing: { before: 240, after: 80 },
+    children: [new TextRun({ text, bold: true, size: 24, color: MID, font: "Arial" })]
+  });
+}
+
+function body(text, opts = {}) {
+  return new Paragraph({
+    spacing: { before: 80, after: 80 },
+    children: [new TextRun({ text, size: 22, color: MID, font: "Arial", ...opts })]
+  });
+}
+
+function bullet(text, level = 0) {
+  return new Paragraph({
+    numbering: { reference: "bullets", level },
+    spacing: { before: 60, after: 60 },
+    children: [new TextRun({ text, size: 22, color: MID, font: "Arial" })]
+  });
+}
+
+function numbered(text, level = 0) {
+  return new Paragraph({
+    numbering: { reference: "numbers", level },
+    spacing: { before: 60, after: 60 },
+    children: [new TextRun({ text, size: 22, color: MID, font: "Arial" })]
+  });
+}
+
+function divider() {
+  return new Paragraph({
+    spacing: { before: 160, after: 160 },
+    border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: LIGHT_BORDER, space: 1 } },
+    children: []
+  });
+}
+
+function note(text) {
+  return new Paragraph({
+    spacing: { before: 120, after: 120 },
+    indent: { left: 720 },
+    border: { left: { style: BorderStyle.SINGLE, size: 12, color: BRAND, space: 8 } },
+    children: [new TextRun({ text, size: 20, color: GRAY, font: "Arial", italics: true })]
+  });
+}
+
+function labelValue(label, value) {
+  return new Paragraph({
+    spacing: { before: 60, after: 60 },
+    children: [
+      new TextRun({ text: `${label}: `, bold: true, size: 22, color: DARK, font: "Arial" }),
+      new TextRun({ text: value, size: 22, color: MID, font: "Arial" })
+    ]
+  });
+}
+
+function makeTable(headers, rows, colWidths) {
+  const totalWidth = colWidths.reduce((a, b) => a + b, 0);
+  return new Table({
+    width: { size: totalWidth, type: WidthType.DXA },
+    columnWidths: colWidths,
+    rows: [
+      new TableRow({
+        tableHeader: true,
+        children: headers.map((h, i) => new TableCell({
+          borders,
+          width: { size: colWidths[i], type: WidthType.DXA },
+          shading: { fill: TABLE_HEAD, type: ShadingType.CLEAR },
+          margins: { top: 100, bottom: 100, left: 140, right: 140 },
+          children: [new Paragraph({
+            children: [new TextRun({ text: h, bold: true, size: 20, color: "FFFFFF", font: "Arial" })]
+          })]
+        }))
+      }),
+      ...rows.map((row, ri) => new TableRow({
+        children: row.map((cell, ci) => new TableCell({
+          borders,
+          width: { size: colWidths[ci], type: WidthType.DXA },
+          shading: { fill: ri % 2 === 0 ? "FFFFFF" : "F9FAFB", type: ShadingType.CLEAR },
+          margins: { top: 80, bottom: 80, left: 140, right: 140 },
+          children: [new Paragraph({
+            children: [new TextRun({ text: cell, size: 20, color: MID, font: "Arial" })]
+          })]
+        }))
+      }))
+    ]
+  });
+}
+
+function sp(n = 1) {
+  return new Paragraph({ spacing: { before: 0, after: 0 }, children: [new TextRun({ text: "", size: n * 4 })] });
+}
+
+// ─── TITLE PAGE ────────────────────────────────────────────────────────────────
+const titlePage = [
+  sp(40),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 200 },
+    children: [new TextRun({ text: "🐱", size: 96, font: "Segoe UI Emoji" })]
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 120 },
+    children: [new TextRun({ text: "NEKO", bold: true, size: 80, color: BRAND, font: "Arial" })]
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 80 },
+    children: [new TextRun({ text: "Desktop Companion — Product Requirements Document", size: 28, color: GRAY, font: "Arial" })]
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 400 },
+    children: [new TextRun({ text: "Version 1.0  ·  June 2026", size: 22, color: GRAY, font: "Arial" })]
+  }),
+  divider(),
+  sp(8),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 80, after: 80 },
+    children: [new TextRun({ text: "Built on Tauri v2  ·  PixiJS v8  ·  React  ·  Rust", size: 22, color: GRAY, font: "Arial", italics: true })]
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 80, after: 80 },
+    children: [new TextRun({ text: "Windows 10/11  ·  macOS 12+", size: 22, color: GRAY, font: "Arial", italics: true })]
+  }),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 1: OVERVIEW ──────────────────────────────────────────────────────
+const section1 = [
+  h1("1. Product Overview"),
+  h2("1.1 Executive Summary"),
+  body("Neko is a lightweight, always-on-screen desktop companion application built for developers, designers, and power users. It extends the open-source Comnyang (콤냥이) desktop pet with significantly richer animations, smarter OS-aware behaviors, a skin/customization system, developer tool integrations, and a full-featured dashboard including a community page for sharing user-created designs."),
+  body("The core design philosophy is simple: maximum delight, minimum resource cost. The original Comnyang uses live SVG DOM manipulation for animations, resulting in high memory usage. Neko replaces this with a canvas-based PixiJS renderer using pre-baked SVG frames, targeting under 40 MB RAM at idle — lighter than a browser tab."),
+  sp(4),
+  h2("1.2 Problem Statement"),
+  body("The original Comnyang desktop pet has three key limitations that Neko addresses:"),
+  bullet("High memory footprint (~80-150 MB) due to live SVG DOM manipulation and Electron's Chromium runtime."),
+  bullet("Limited animation vocabulary — no walking, climbing, peeking, grooming, or play behaviors."),
+  bullet("No customization beyond JSON color configs, and no community platform for sharing designs."),
+  sp(4),
+  h2("1.3 Goals & Success Metrics"),
+  makeTable(
+    ["Goal", "Metric", "Target"],
+    [
+      ["Low memory footprint", "RAM at idle (no agent hooks)", "< 40 MB"],
+      ["Smooth animation", "Animation frame rate", "60 fps sustained"],
+      ["Fast startup", "Cold launch to pet visible", "< 1.5 seconds"],
+      ["Small binary", "Installer size", "< 20 MB"],
+      ["User engagement", "DAU/MAU ratio at 30 days", "> 60%"],
+      ["Community adoption", "Designs shared in first 3 months", "> 500"],
+    ],
+    [3120, 3120, 3120]
+  ),
+  sp(4),
+  h2("1.4 Out of Scope (v1.0)"),
+  bullet("Linux support (planned for v1.2)"),
+  bullet("Mobile companion app"),
+  bullet("Cloud sync of wellness data"),
+  bullet("Multiplayer / shared desktop pets"),
+  bullet("AI-generated skin creation (planned v1.3)"),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 2: TECH STACK ────────────────────────────────────────────────────
+const section2 = [
+  h1("2. Technical Architecture"),
+  h2("2.1 Technology Stack"),
+  makeTable(
+    ["Layer", "Technology", "Rationale"],
+    [
+      ["Desktop shell", "Tauri v2 (Rust)", "OS WebView2/WKWebView — no bundled Chromium. 15-30 MB RAM vs 80-150 MB for Electron."],
+      ["Rendering", "PixiJS v8 (WebGL/Canvas2D)", "Hardware-accelerated spritesheet rendering. SVGs pre-baked to ImageBitmap at startup."],
+      ["Dashboard UI", "React 18 + Vite", "Component-driven dashboard, skin editor, community pages."],
+      ["State management", "Zustand", "Lightweight, works across WebView IPC bridge."],
+      ["Persistence", "tauri-plugin-store", "JSON config, skin definitions, wellness history."],
+      ["Native window detection", "Rust (Win32 / CoreGraphics FFI)", "Direct OS API calls; no extra Node FFI dependency."],
+      ["Agent hook server", "Axum (Rust HTTP)", "Replaces Express. Tiny footprint, same HTTP contract as Comnyang."],
+      ["Build tooling", "Vite + Tauri CLI", "Hot reload in dev; optimised bundles for prod."],
+    ],
+    [1560, 1820, 5980]
+  ),
+  sp(4),
+  h2("2.2 Process Architecture"),
+  body("Neko runs as a single Tauri process containing two Rust-managed background tasks and two WebView windows:"),
+  bullet("Rust core — window tracker, agent HTTP server, wellness timer, IPC event emitter."),
+  bullet("Pet WebView (always-on-top, transparent, frameless) — PixiJS canvas, behavior state machine, animation player."),
+  bullet("Dashboard WebView (standard window, shown on demand) — React app for customization, wellness, community."),
+  note("The Pet WebView and Dashboard WebView communicate exclusively via Tauri's typed IPC commands and events — never via shared memory or direct DOM access across windows."),
+  sp(4),
+  h2("2.3 SVG-to-Canvas Pipeline"),
+  body("The original Comnyang ships 30+ individual SVG body-part files. Neko reuses this asset library with a pre-bake pipeline:"),
+  numbered("At app startup, a Web Worker loads each SVG file as a Blob URL."),
+  numbered("SVG parts are composited into animation frames using an offscreen OffscreenCanvas, with CSS transforms applied per frame definition."),
+  numbered("Each composited frame is converted to an ImageBitmap and uploaded to a PixiJS Texture cache."),
+  numbered("The Worker is terminated. Runtime animation is pure canvas draw calls — zero live SVG DOM."),
+  body("This eliminates the original app's primary memory cost. New skins are applied by tinting the fur-pattern texture layer before baking — no re-download required."),
+  sp(4),
+  h2("2.4 Layered Skin System"),
+  body("Each cat skin is defined as four composited PNG/SVG layers drawn in order:"),
+  makeTable(
+    ["Layer", "File", "Customizable?", "Notes"],
+    [
+      ["Base body", "body.svg", "No", "Silhouette and structure — never changes."],
+      ["Fur pattern", "fur-{skinId}.png", "Yes — color tinted", "The primary customization layer. Community shareable."],
+      ["Markings", "markings-{skinId}.png", "Yes — optional overlay", "Stripes, spots, patches drawn on top of fur."],
+      ["Accessories", "acc-{skinId}.png", "Yes — optional", "Collar, hat, bow, glasses, etc."],
+    ],
+    [1560, 2340, 1560, 3900]
+  ),
+  note("Community skin sharing only requires the fur pattern PNG + a small JSON config (accent colors, marking positions). File sizes are kept small for community uploads."),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 3: ANIMATION SYSTEM ─────────────────────────────────────────────
+const section3 = [
+  h1("3. Animation System"),
+  h2("3.1 Animation Inventory"),
+  body("The following animation states are required for v1.0. States marked NEW require new SVG artwork. States marked REUSE can be assembled from existing Comnyang SVG assets with new transform sequences."),
+  makeTable(
+    ["Animation State", "Source", "Frame Count", "Loop?", "Trigger"],
+    [
+      ["idle-sit", "REUSE — default.svg", "1 (breathing bob)", "Yes", "Default when no other state active"],
+      ["idle-blink", "REUSE — face-base.svg", "3", "No", "Random every 3-7s during idle"],
+      ["groom-lick-paw", "NEW", "8", "No", "Idle > 5 minutes"],
+      ["groom-wipe-face", "NEW", "6", "No", "After groom-lick-paw"],
+      ["sleep", "REUSE — stretch pose + NEW zzz overlay", "4", "Yes", "Idle > 20 minutes"],
+      ["walk-right", "NEW — walk-leg-left/right cycle", "6", "Yes", "Random walk behavior or screen traversal"],
+      ["walk-left", "NEW — mirrored walk-right", "6", "Yes", "As above, mirrored"],
+      ["fall", "REUSE — jump variants", "4", "No", "Dropping off window edge"],
+      ["land", "REUSE — jump-start.svg", "3", "No", "After fall"],
+      ["climb-up", "NEW — climb-leg variants", "6", "Yes", "Climbing window edge upward"],
+      ["climb-down", "NEW — mirrored climb-up", "6", "Yes", "Climbing window edge downward"],
+      ["peek-up", "NEW — head-only over window edge", "4", "No", "Near top of a window border"],
+      ["peek-side", "NEW — head-only at side of window", "4", "No", "Near side window border"],
+      ["peek-retreat", "NEW — peek reverse", "3", "No", "Leaving peek state"],
+      ["play-ball-bat", "NEW — rolling-paw.svg extended", "6", "Yes", "Play with ball behavior"],
+      ["play-ball-chase", "NEW — walk + swipe combo", "8", "No", "Ball rolls away"],
+      ["react-done", "REUSE — jump-ing.svg + heart.svg", "5", "No", "AI agent task complete"],
+      ["react-error", "NEW — droopy posture", "4", "No", "AI agent error"],
+      ["react-thinking", "REUSE — scroll-ing.svg", "4", "Yes", "AI agent working"],
+      ["stretch", "REUSE — stretch-start/pose/end", "12", "No", "Wellness standup reminder"],
+      ["jump", "REUSE — jump-start/ing", "6", "No", "Notification or excitement"],
+    ],
+    [2340, 2340, 1300, 900, 2480]
+  ),
+  sp(4),
+  h2("3.2 Behavior State Machine"),
+  body("The behavior engine runs in the Pet WebView at 10 Hz (tick every 100 ms). It maintains a context object and evaluates transition conditions in priority order:"),
+  makeTable(
+    ["Current State", "Transition To", "Condition"],
+    [
+      ["IDLE", "GROOM", "idleTime > 5 min"],
+      ["IDLE", "SLEEP", "idleTime > 20 min"],
+      ["IDLE", "WALK", "random < 30% per minute"],
+      ["IDLE", "PLAY_BALL", "idleTime > 10 min AND random < 40%"],
+      ["IDLE", "PEEK", "petPosition within 80px of detected window edge"],
+      ["IDLE / WALK", "REACT_THINKING", "agent state = working"],
+      ["REACT_THINKING", "REACT_DONE", "agent state = complete"],
+      ["REACT_THINKING", "REACT_ERROR", "agent state = error"],
+      ["WALK", "PEEK", "petPosition within 80px of detected window edge"],
+      ["WALK", "FALL", "petPosition reaches screen edge with no surface below"],
+      ["WALK", "IDLE", "walkDuration > maxDuration"],
+      ["PEEK", "CLIMB", "windowBelow = true AND random < 60%"],
+      ["PEEK", "PEEK_RETREAT", "peekDuration > maxDuration OR window closed"],
+      ["FALL", "LAND", "surface detected below petPosition"],
+      ["CLIMB", "WALK", "reached top or bottom of window edge"],
+      ["GROOM", "IDLE", "groomDuration > maxDuration"],
+      ["SLEEP", "IDLE", "user input detected OR mouse moved near pet"],
+      ["PLAY_BALL", "IDLE", "playDuration > maxDuration"],
+      ["any", "STRETCH", "wellness standup reminder fires (overrides all)"],
+    ],
+    [2200, 2200, 4960]
+  ),
+  note("Agent state transitions (REACT_*) are high-priority overrides that interrupt any current non-wellness state. Wellness-triggered states (STRETCH, BREATHING) are the only states that can interrupt REACT states."),
+  sp(4),
+  h2("3.3 Physics & Movement"),
+  body("The pet moves across the screen using a simple physics model — no physics engine dependency needed:"),
+  bullet("Position is tracked as (x, y) in screen coordinates, updated each tick."),
+  bullet("Walk speed: 60-80 px/s, randomized per walk session for personality variation."),
+  bullet("Gravity when airborne: 400 px/s² acceleration downward."),
+  bullet("The pet can walk on the taskbar (Windows) or Dock/menu bar area (macOS) as well as the desktop floor."),
+  bullet("If window detection is enabled, the pet can also walk along the top edge of open application windows."),
+  bullet("Ball physics: the play ball follows a simple parabolic arc with damped bounce. It is rendered as a separate PixiJS sprite below the cat layer."),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 4: WINDOW AWARENESS ─────────────────────────────────────────────
+const section4 = [
+  h1("4. Window Awareness Feature"),
+  h2("4.1 Feature Description"),
+  body("When enabled by the user, Neko detects the positions and sizes of other open application windows on the desktop. This allows the cat to walk on top of those windows, peek over their edges, and climb between them — replicating the classic Neko/Shimeji behavior."),
+  sp(4),
+  h2("4.2 Permission Model"),
+  body("Window awareness is opt-in with a clear first-run permission prompt. The feature degrades gracefully if the user declines:"),
+  makeTable(
+    ["OS", "API Used", "Permission Required", "Fallback Behavior"],
+    [
+      ["Windows 10/11", "EnumWindows + GetWindowRect (Win32)", "None — works for all normal windows", "N/A — always available once opted in"],
+      ["macOS 12+", "CGWindowListCopyWindowInfo (CoreGraphics)", "Screen Recording permission (System Preferences)", "Cat stays on desktop/Dock edge only"],
+    ],
+    [1300, 2600, 2600, 2860]
+  ),
+  sp(4),
+  body("The first-run permission flow is:"),
+  numbered("On first launch, show the permission onboarding card in the Pet window: \"Want your cat to walk on window edges and peek into your apps?\""),
+  numbered("Two buttons: [Enable Window Walking] and [Maybe Later]."),
+  numbered("On macOS, [Enable Window Walking] opens System Preferences → Privacy → Screen Recording, highlights Neko, and shows a tooltip explaining the requirement."),
+  numbered("On Windows, [Enable Window Walking] immediately activates the feature with no OS prompt needed."),
+  numbered("If the user declines, the feature is permanently skippable. Settings > Window Awareness can enable it later."),
+  note("macOS Screen Recording permission gives Neko access to window position metadata only. It does not capture screen content. This should be clearly communicated in the permission prompt."),
+  sp(4),
+  h2("4.3 Window Tracker Implementation"),
+  body("The window tracker runs as a Rust background task in the Tauri process, polling every 500 ms:"),
+  bullet("Windows: calls EnumWindows via the windows-rs crate, filters for visible, non-minimized windows, returns Vec<WindowInfo { title, x, y, width, height }>."),
+  bullet("macOS: calls CGWindowListCopyWindowInfo with kCGWindowListOptionOnScreenOnly, filters kCGWindowLayer == 0 (normal app windows)."),
+  bullet("Results are emitted to the Pet WebView via a Tauri event (window-list-updated) only when the window list has changed — no unnecessary IPC traffic."),
+  bullet("The pet window itself is excluded from the returned list."),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 5: WELLNESS SYSTEM ──────────────────────────────────────────────
+const section5 = [
+  h1("5. Wellness System"),
+  h2("5.1 Overview"),
+  body("Neko inherits and extends the WellnessManager from Comnyang. All seven original wellness features are retained with visual and behavioral enhancements. Two new features are added in v1.0."),
+  sp(4),
+  h2("5.2 Wellness Features"),
+  makeTable(
+    ["Feature", "Trigger", "Cat Behavior", "Status"],
+    [
+      ["Eye Strain (20-20-20)", "Every 20 minutes", "Cat covers eyes with paws, displays 20s countdown overlay", "Ported from Comnyang"],
+      ["Hydration", "Configurable interval (default 60 min)", "Cat mimics drinking, shows water drop animation", "Ported — new animation"],
+      ["Posture Check", "Configurable interval (default 45 min)", "Cat sits upright, text bubble: 'Sit up straight!'", "Ported from Comnyang"],
+      ["Stand Up & Stretch", "Configurable interval (default 90 min)", "Triggers full STRETCH animation sequence", "Ported — uses new anim"],
+      ["Breathing Exercise", "On demand or configurable", "Cat breathing bob synced to 4-7-8 rhythm, overlay guide", "Ported from Comnyang"],
+      ["Daily Summary", "Configurable time (default 6 PM)", "Cat jumps, dashboard notification with wellness recap", "Ported from Comnyang"],
+      ["Screen Time Limit", "Daily total threshold", "Cat falls asleep on screen edge, gentle nag overlay", "Ported from Comnyang"],
+      ["Focus Mode", "User-triggered via dashboard or shortcut", "Cat enters REACT_THINKING pose, suppresses all other wellness", "NEW in v1.0"],
+      ["Break Enforcer", "After Focus Mode ends", "Mandatory 5-min break with cat playing/grooming — cannot dismiss", "NEW in v1.0"],
+    ],
+    [2200, 2600, 2600, 1960]
+  ),
+  sp(4),
+  h2("5.3 Wellness Dashboard Panel"),
+  body("All wellness settings are configurable through the Dashboard (Section 7). Users can:"),
+  bullet("Toggle each wellness feature on/off independently."),
+  bullet("Set custom intervals for each reminder type."),
+  bullet("View a weekly wellness compliance heatmap (7-day grid, color-coded by completion rate)."),
+  bullet("Snooze individual reminders for 15, 30, or 60 minutes."),
+  bullet("Export wellness history as CSV."),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 6: AGENT INTEGRATIONS ───────────────────────────────────────────
+const section6 = [
+  h1("6. Developer Agent Integrations"),
+  h2("6.1 HTTP Hook Server"),
+  body("Neko runs a local Axum (Rust) HTTP server on port 23456, maintaining full backward compatibility with Comnyang's hook contract. Any tool that already integrates with Comnyang works with Neko with zero changes."),
+  makeTable(
+    ["Endpoint", "Method", "Body", "Cat Reaction"],
+    [
+      ["POST /agent/start", "POST", "{ agent, task }", "Transitions to REACT_THINKING"],
+      ["POST /agent/complete", "POST", "{ agent, task }", "REACT_DONE — jump + heart + meow"],
+      ["POST /agent/error", "POST", "{ agent, error }", "REACT_ERROR — droop pose + sad sound"],
+      ["POST /agent/notify", "POST", "{ message }", "Jump + speech bubble with message"],
+      ["GET /status", "GET", "—", "Returns current pet state as JSON"],
+    ],
+    [2340, 1300, 2340, 3380]
+  ),
+  sp(4),
+  h2("6.2 Supported Agent Integrations"),
+  makeTable(
+    ["Agent / Tool", "Integration Method", "Status"],
+    [
+      ["Claude Code (claude CLI)", "Log file monitor — CodexLogMonitor ported to Rust", "Ported from Comnyang"],
+      ["Cursor IDE", "Log file monitor — CursorLogMonitor ported to Rust", "Ported from Comnyang"],
+      ["Kiro Agent", "Log file monitor — KiroLogMonitor ported to Rust", "Ported from Comnyang"],
+      ["Antigravity IDE", "Shell hook — comnyang-antigravity-hook.js ported + install script updated", "Ported from Comnyang"],
+      ["GitHub Copilot", "VS Code extension hook via HTTP POST", "NEW in v1.0"],
+      ["Custom / Generic", "Any tool can POST to localhost:23456 using the documented API", "Open"],
+    ],
+    [2340, 3900, 2120]
+  ),
+  sp(4),
+  h2("6.3 Hook Installer"),
+  body("The hooks/install.js logic is ported to a Rust binary (neko-hook-install) that is run once on first launch. It:"),
+  bullet("Detects installed agents by checking common config/binary paths on Windows and macOS."),
+  bullet("Injects the Neko HTTP call into each detected agent's hook/profile file."),
+  bullet("Is idempotent — safe to run multiple times."),
+  bullet("Can be re-run from Dashboard > Integrations > Reinstall Hooks."),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 7: DASHBOARD ─────────────────────────────────────────────────────
+const section7 = [
+  h1("7. Dashboard"),
+  h2("7.1 Overview"),
+  body("The Dashboard is a separate React application rendered in a standard (non-transparent) Tauri WebView window. It is opened via right-click on the pet, the system tray icon, or the global shortcut Ctrl/Cmd+Shift+N."),
+  body("The Dashboard has five main sections, accessible via a left sidebar navigation:"),
+  bullet("Home — quick stats, active state, recent agent events."),
+  bullet("Customize — cat skin editor, color picker, accessory selection."),
+  bullet("Wellness — feature toggles, interval settings, history."),
+  bullet("Integrations — agent hook status, reinstall hooks, manual trigger."),
+  bullet("Community — browse, download, and share skin designs."),
+  sp(4),
+  h2("7.2 Home Panel"),
+  bullet("Live preview of the current cat skin (miniature PixiJS canvas, same renderer as pet window)."),
+  bullet("Current behavior state badge (IDLE, WALKING, SLEEPING, etc.)."),
+  bullet("Today's wellness score (0-100%) — percentage of reminders responded to."),
+  bullet("Recent agent events log — last 10 agent hook calls with timestamp, agent name, and status."),
+  bullet("Quick action buttons: Wake Up (if sleeping), Start Focus Mode, Open Skin Editor."),
+  sp(4),
+  h2("7.3 Customize Panel"),
+  body("The skin editor is a visual tool where users design their cat's appearance:"),
+  bullet("Fur color picker — primary and secondary color with gradient blending control."),
+  bullet("Pattern selector — none, tabby stripes, tortoiseshell, calico, solid, custom upload."),
+  bullet("Markings editor — paint individual spots or patches on a body diagram using a brush tool. Grid-based, inheriting the Comnyang pattern editor concept."),
+  bullet("Accessory selector — choose from a built-in library of accessories (collar colors, hats, bows, glasses). Accessories are layered SVGs."),
+  bullet("Live preview pane — shows the assembled cat with the current skin settings in real time."),
+  bullet("Preset skins — load one of the built-in presets (black cat, calico, siamese, orange tabby, tuxedo)."),
+  bullet("Export skin — generates a skin package (JSON config + fur/marking PNGs) for community sharing."),
+  bullet("Import skin — drag-drop a .nekoskin file to apply a community skin."),
+  sp(4),
+  h2("7.4 Wellness Panel"),
+  body("See Section 5.3 for the full wellness panel feature list."),
+  sp(4),
+  h2("7.5 Integrations Panel"),
+  bullet("Shows detected agents with green/red status indicators."),
+  bullet("[Reinstall Hooks] button — re-runs the hook installer for all detected agents."),
+  bullet("Manual trigger panel — send test events to the pet (start, complete, error) for testing."),
+  bullet("Port configuration — change the hook server port from the default 23456 if there is a conflict."),
+  bullet("Window Awareness toggle — enable/disable with link to OS permission settings if needed."),
+  sp(4),
+  h2("7.6 Community Panel"),
+  body("The community feature is delivered as an embedded web experience. The Tauri WebView loads the Neko community web app (hosted externally — see Section 8). It is not a local React page."),
+  body("Features accessible from the embedded community panel:"),
+  bullet("Browse skins — grid of community-submitted designs, sortable by newest, most downloaded, most liked."),
+  bullet("Preview skin — tap any design to see a live animated preview in a modal."),
+  bullet("Download skin — one-click downloads the .nekoskin file and imports it into the local Customize panel."),
+  bullet("Upload skin — submits the user's exported skin package to the community. Requires a free account."),
+  bullet("Like and comment — social interaction on skin posts."),
+  bullet("Creator profiles — view all skins from a specific creator."),
+  note("The community backend (user accounts, skin storage, feed API) is a separate web service outside the scope of this PRD. The Tauri app only consumes the community web app as a WebView embed. Authentication uses OAuth via GitHub or Google — no separate account system in the desktop app."),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 8: COMMUNITY WEB APP ─────────────────────────────────────────────
+const section8 = [
+  h1("8. Community Web App (Companion Service)"),
+  h2("8.1 Scope"),
+  body("The Neko community web app is a separate Next.js web application deployed independently from the desktop app. It provides the backend and frontend for skin sharing, user accounts, and the community feed. The desktop app embeds it as a WebView — users never need to open a browser separately."),
+  sp(4),
+  h2("8.2 Tech Stack"),
+  makeTable(
+    ["Layer", "Technology"],
+    [
+      ["Frontend", "Next.js 14 (App Router) + Tailwind CSS"],
+      ["Backend API", "Next.js API routes + Prisma ORM"],
+      ["Database", "PostgreSQL (Supabase)"],
+      ["File storage", "Supabase Storage (skin package files, preview images)"],
+      ["Auth", "NextAuth.js — GitHub + Google OAuth"],
+      ["Deployment", "Vercel"],
+    ],
+    [2340, 7020]
+  ),
+  sp(4),
+  h2("8.3 Core API Endpoints"),
+  makeTable(
+    ["Endpoint", "Method", "Description"],
+    [
+      ["/api/skins", "GET", "Paginated list of public skins. Query: sort, page, search."],
+      ["/api/skins", "POST", "Upload a new skin. Requires auth. Body: multipart form with JSON + PNG files."],
+      ["/api/skins/[id]", "GET", "Single skin detail + download URL."],
+      ["/api/skins/[id]/like", "POST", "Toggle like on a skin. Requires auth."],
+      ["/api/users/[id]", "GET", "Public creator profile + their skins."],
+      ["/api/auth/[...nextauth]", "GET/POST", "NextAuth.js OAuth handler."],
+    ],
+    [2600, 1300, 5460]
+  ),
+  sp(4),
+  h2("8.4 Skin Package Format (.nekoskin)"),
+  body("A .nekoskin file is a ZIP archive with the following structure:"),
+  bullet("skin.json — metadata: name, author, version, created_at, color palette, accessory IDs."),
+  bullet("fur.png — 512×512 px fur pattern layer."),
+  bullet("markings.png — 512×512 px markings overlay (optional, transparent background)."),
+  bullet("preview.png — 200×200 px static preview thumbnail."),
+  note("Maximum .nekoskin file size: 2 MB. The desktop app validates the package structure on import before applying."),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 9: PERFORMANCE ───────────────────────────────────────────────────
+const section9 = [
+  h1("9. Performance Requirements"),
+  h2("9.1 Memory Budget"),
+  makeTable(
+    ["Component", "Budget", "Notes"],
+    [
+      ["Tauri / Rust core", "< 8 MB", "Window tracker, HTTP server, IPC, wellness timers."],
+      ["Pet WebView (PixiJS + state)", "< 25 MB", "Includes baked texture cache for all animation frames."],
+      ["Dashboard WebView (when open)", "< 40 MB additional", "React app; closed when not in use — memory released."],
+      ["Total (pet only, dashboard closed)", "< 35 MB", "Target for background running state."],
+      ["Total (pet + dashboard open)", "< 75 MB", "Acceptable while dashboard is visible."],
+    ],
+    [2600, 1820, 4940]
+  ),
+  sp(4),
+  h2("9.2 CPU Budget"),
+  bullet("Pet WebView idle (IDLE state, no agent activity): < 0.5% CPU on a modern 4-core machine."),
+  bullet("Pet WebView during animation: < 3% CPU. PixiJS requestAnimationFrame is throttled to 60 fps; drops to 30 fps if the window is not in the foreground."),
+  bullet("Window tracker Rust task: < 0.1% CPU. Polls at 2 Hz (every 500 ms); skips emission if window list unchanged."),
+  bullet("Agent HTTP server: negligible — event-driven, only active when a hook POST arrives."),
+  sp(4),
+  h2("9.3 Startup Performance"),
+  makeTable(
+    ["Milestone", "Target"],
+    [
+      ["Process launch to WebView visible", "< 800 ms"],
+      ["SVG pre-bake pipeline complete (all frames ready)", "< 1.5 s on cold start"],
+      ["Pet visible and animated on screen", "< 1.5 s"],
+      ["Dashboard first meaningful paint (on open)", "< 600 ms"],
+    ],
+    [5200, 4160]
+  ),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 10: UX & SETTINGS ───────────────────────────────────────────────
+const section10 = [
+  h1("10. UX & Settings"),
+  h2("10.1 System Tray"),
+  bullet("Neko runs in the system tray (Windows) or menu bar (macOS) at all times."),
+  bullet("Left-click: toggle pet window visibility."),
+  bullet("Right-click menu: Open Dashboard | Wake Cat | Mute Sounds | Start Focus Mode | Quit."),
+  sp(4),
+  h2("10.2 Pet Interaction"),
+  bullet("Left-click on cat: cat reacts with a heart animation and meow sound."),
+  bullet("Right-click on cat: quick context menu — Open Dashboard | Change Skin | Sleep | Quit."),
+  bullet("Drag cat: pick up and move to any position on screen. On drop, cat lands and plays the LAND animation."),
+  bullet("Mouse hover: cat eyes track cursor (inherited from Comnyang)."),
+  sp(4),
+  h2("10.3 Global Settings"),
+  makeTable(
+    ["Setting", "Default", "Description"],
+    [
+      ["Sound effects", "On", "Toggle meow and notification sounds."],
+      ["Sound volume", "50%", "Volume slider 0-100%."],
+      ["Animation speed", "Normal", "Slow / Normal / Fast — scales all animation playback rates."],
+      ["Cat size", "100%", "Scale factor 50-200% applied to the pet window."],
+      ["Start at login", "On", "Add to OS startup items."],
+      ["Window awareness", "Off (opt-in)", "Enable window edge walking and peeking."],
+      ["Agent hook port", "23456", "HTTP port for agent integrations."],
+      ["Theme (dashboard)", "System", "Light / Dark / System."],
+      ["Language", "System", "English, Japanese, Korean, Chinese (Simplified)."],
+    ],
+    [2860, 1560, 4940]
+  ),
+  sp(4),
+  h2("10.4 Accessibility"),
+  bullet("All Dashboard UI components meet WCAG 2.1 AA color contrast requirements."),
+  bullet("Dashboard is fully keyboard navigable with visible focus indicators."),
+  bullet("Screen reader support for Dashboard interactive elements (ARIA labels)."),
+  bullet("Reduced motion option: disables all pet animations except idle breathing bob when enabled."),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 11: MILESTONES ───────────────────────────────────────────────────
+const section11 = [
+  h1("11. Development Milestones"),
+  h2("11.1 Phased Roadmap"),
+  makeTable(
+    ["Milestone", "Duration", "Deliverables"],
+    [
+      ["M1 — Foundation", "Week 1-2", "Tauri project scaffold. Transparent always-on-top window on Windows + macOS. PixiJS canvas rendering one baked SVG pose. System tray with basic menu."],
+      ["M2 — SVG Pipeline & Idle", "Week 3", "Full SVG pre-bake worker. All REUSE animations baked and playing. Idle/blink/breathing bob loop. Mouse eye-tracking ported."],
+      ["M3 — Behavior Engine", "Week 4-5", "Full state machine. Walk, fall, land, sleep states. Pet draggable. Right-click / left-click interactions."],
+      ["M4 — New Animations", "Week 6-7", "New SVG artwork: groom, peek, climb, play-ball, react-error. All new states integrated into behavior engine."],
+      ["M5 — Window Awareness", "Week 8", "Rust window tracker. Windows + macOS implementations. Permission onboarding flow. Peek + climb on real app windows."],
+      ["M6 — Agent Integrations", "Week 9", "Axum HTTP server. All four log monitors ported to Rust. Hook installer. React/error/thinking states wired up."],
+      ["M7 — Skin System", "Week 10", "Layered skin compositor. Skin JSON format. Five built-in presets. .nekoskin import/export."],
+      ["M8 — Dashboard", "Week 11-12", "Full React dashboard: Home, Customize (skin editor), Wellness, Integrations panels."],
+      ["M9 — Community", "Week 13-14", "Community web app deployed (Next.js + Supabase). Community panel embedded in dashboard. Upload/download/like flows."],
+      ["M10 — Polish & Release", "Week 15-16", "Performance profiling. Memory optimisation. Windows + macOS installers. Auto-update via tauri-plugin-updater. Public beta."],
+    ],
+    [2080, 1560, 5720]
+  ),
+  sp(4),
+  h2("11.2 Risk Register"),
+  makeTable(
+    ["Risk", "Likelihood", "Impact", "Mitigation"],
+    [
+      ["macOS Screen Recording permission UX confuses users", "High", "Medium", "Clear in-app copy + screenshot guide in onboarding. Fallback gracefully."],
+      ["PixiJS WebGL not available in WKWebView (macOS)", "Medium", "High", "PixiJS v8 auto-falls back to Canvas2D. Test on M1/M2 macOS early in M1."],
+      ["SVG pre-bake takes > 3s on low-end hardware", "Medium", "Medium", "Show progress indicator. Cache baked frames to disk (tauri-plugin-store)."],
+      ["Rust window tracker breaks on OS update", "Low", "High", "Abstract behind a trait. Platform-specific code is isolated and easy to swap."],
+      ["Community spam / inappropriate skin uploads", "High", "Medium", "Moderation queue for new uploads. Report button. Rate limit uploads per account."],
+      ["New animation artwork quality inconsistent", "Medium", "Medium", "Commission a single artist for all NEW frames. Provide style guide."],
+    ],
+    [2860, 1300, 1300, 3900]
+  ),
+  new Paragraph({ children: [new PageBreak()] })
+];
+
+// ─── SECTION 12: FILE STRUCTURE ───────────────────────────────────────────────
+const section12 = [
+  h1("12. Recommended Project Structure"),
+  body("The following top-level repository structure is recommended for the Neko codebase:"),
+  sp(4),
+  new Paragraph({
+    spacing: { before: 80, after: 80 },
+    children: [new TextRun({
+      text: [
+        "neko/",
+        "├── src-tauri/                  ← Rust / Tauri core",
+        "│   ├── src/",
+        "│   │   ├── main.rs             ← App entry, window setup",
+        "│   │   ├── window_tracker.rs   ← Win32 + CoreGraphics window list",
+        "│   │   ├── agent_server.rs     ← Axum HTTP hook server",
+        "│   │   ├── wellness.rs         ← Timer-based wellness events",
+        "│   │   ├── hook_installer.rs   ← Agent profile hook injector",
+        "│   │   └── log_monitors/       ← Codex, Cursor, Kiro log watchers",
+        "│   └── tauri.conf.json",
+        "├── src/                        ← Frontend source",
+        "│   ├── pet/                    ← Pet WebView",
+        "│   │   ├── index.html",
+        "│   │   ├── app.js              ← PixiJS setup + IPC listeners",
+        "│   │   ├── bake-worker.js      ← SVG → ImageBitmap worker",
+        "│   │   ├── animator.js         ← Spritesheet / frame controller",
+        "│   │   ├── physics.js          ← Walk, fall, position engine",
+        "│   │   ├── behavior-engine.js  ← State machine",
+        "│   │   └── behaviors/          ← idle.js, walk.js, peek.js …",
+        "│   └── dashboard/              ← Dashboard WebView (React)",
+        "│       ├── main.jsx",
+        "│       └── pages/              ← Home, Customize, Wellness, …",
+        "├── assets/",
+        "│   ├── svg/                    ← All Comnyang SVG parts + new ones",
+        "│   ├── skins/                  ← Built-in skin presets",
+        "│   └── sounds/                 ← Meow and notification sounds",
+        "├── community/                  ← Next.js community web app",
+        "│   ├── app/                    ← Next.js App Router pages",
+        "│   ├── prisma/                 ← Database schema",
+        "│   └── …",
+        "└── package.json",
+      ].join("\n"),
+      size: 18, font: "Courier New", color: MID
+    })]
+  }),
+  sp(8),
+  divider(),
+  sp(8),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 160, after: 80 },
+    children: [new TextRun({ text: "End of Document", size: 20, color: GRAY, font: "Arial", italics: true })]
+  }),
+  new Paragraph({
+    alignment: AlignmentType.CENTER,
+    spacing: { before: 0, after: 0 },
+    children: [new TextRun({ text: "Neko Desktop Companion — PRD v1.0 — June 2026", size: 18, color: GRAY, font: "Arial" })]
+  }),
+];
+
+// ─── ASSEMBLE DOCUMENT ────────────────────────────────────────────────────────
+const doc = new Document({
+  numbering: {
+    config: [
+      {
+        reference: "bullets",
+        levels: [{
+          level: 0, format: LevelFormat.BULLET, text: "•", alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 720, hanging: 360 } } }
+        }, {
+          level: 1, format: LevelFormat.BULLET, text: "◦", alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 1080, hanging: 360 } } }
+        }]
+      },
+      {
+        reference: "numbers",
+        levels: [{
+          level: 0, format: LevelFormat.DECIMAL, text: "%1.", alignment: AlignmentType.LEFT,
+          style: { paragraph: { indent: { left: 720, hanging: 360 } } }
+        }]
+      }
+    ]
+  },
+  styles: {
+    default: { document: { run: { font: "Arial", size: 22 } } },
+    paragraphStyles: [
+      {
+        id: "Heading1", name: "Heading 1", basedOn: "Normal", next: "Normal", quickFormat: true,
+        run: { size: 36, bold: true, font: "Arial", color: DARK },
+        paragraph: { spacing: { before: 400, after: 160 }, outlineLevel: 0 }
+      },
+      {
+        id: "Heading2", name: "Heading 2", basedOn: "Normal", next: "Normal", quickFormat: true,
+        run: { size: 28, bold: true, font: "Arial", color: BRAND },
+        paragraph: { spacing: { before: 320, after: 120 }, outlineLevel: 1 }
+      },
+      {
+        id: "Heading3", name: "Heading 3", basedOn: "Normal", next: "Normal", quickFormat: true,
+        run: { size: 24, bold: true, font: "Arial", color: MID },
+        paragraph: { spacing: { before: 240, after: 80 }, outlineLevel: 2 }
+      },
+    ]
+  },
+  sections: [{
+    properties: {
+      page: {
+        size: { width: 12240, height: 15840 },
+        margin: { top: 1440, right: 1440, bottom: 1440, left: 1440 }
+      }
+    },
+    headers: {
+      default: new Header({
+        children: [
+          new Paragraph({
+            border: { bottom: { style: BorderStyle.SINGLE, size: 4, color: LIGHT_BORDER, space: 4 } },
+            spacing: { before: 0, after: 160 },
+            children: [
+              new TextRun({ text: "Neko — Desktop Companion PRD", size: 18, color: GRAY, font: "Arial" }),
+              new TextRun({ text: "   ·   v1.0   ·   June 2026", size: 18, color: GRAY, font: "Arial" }),
+            ]
+          })
+        ]
+      })
+    },
+    footers: {
+      default: new Footer({
+        children: [
+          new Paragraph({
+            border: { top: { style: BorderStyle.SINGLE, size: 4, color: LIGHT_BORDER, space: 4 } },
+            spacing: { before: 160, after: 0 },
+            tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
+            children: [
+              new TextRun({ text: "Confidential — Internal Use", size: 18, color: GRAY, font: "Arial" }),
+              new TextRun({ text: "\tPage ", size: 18, color: GRAY, font: "Arial" }),
+              new TextRun({ children: [PageNumber.CURRENT], size: 18, color: GRAY, font: "Arial" }),
+              new TextRun({ text: " of ", size: 18, color: GRAY, font: "Arial" }),
+              new TextRun({ children: [PageNumber.TOTAL_PAGES], size: 18, color: GRAY, font: "Arial" }),
+            ]
+          })
+        ]
+      })
+    },
+    children: [
+      ...titlePage,
+      ...section1,
+      ...section2,
+      ...section3,
+      ...section4,
+      ...section5,
+      ...section6,
+      ...section7,
+      ...section8,
+      ...section9,
+      ...section10,
+      ...section11,
+      ...section12,
+    ]
+  }]
+});
+
+Packer.toBuffer(doc).then(buffer => {
+  fs.writeFileSync('/mnt/user-data/outputs/Neko_PRD_v1.0.docx', buffer);
+  console.log('Done');
+});
